@@ -2,12 +2,14 @@ package matrixmultiplication;
 
 import java.util.Scanner;
 
-class MatrixMultiplication extends Thread {
+public class MatrixMultiplication extends Thread {
 
     static int matrix1[][];
     static int matrix2[][];
     static int result[][];
     static int n = 3;
+    static Scanner input = new Scanner(System.in);
+
     int row;
 
     MatrixMultiplication(int i) {
@@ -27,10 +29,43 @@ class MatrixMultiplication extends Thread {
         }
     }
 
+    //Generate Matrix Automatically
+    private static void generate() {
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix1[i][j] = (int) (Math.random() * 10);
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix2[i][j] = (int) (Math.random() * 10);
+            }
+        }
+
+    }
+
+    //Input Matrix Manually
+    private static void inputManually() {
+
+        System.out.println("\nEnter the First Matrix:");
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix1[i][j] = input.nextInt();
+            }
+        }
+        System.out.println("\nEnter the Second Matrix:");
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix2[i][j] = input.nextInt();
+            }
+        }
+    }
+
     public static void main(String args[]) {
 
         int i, j;
-        Scanner input = new Scanner(System.in);
         System.out.print("Enter the order of Matrix:\n");
         n = input.nextInt();
 
@@ -38,23 +73,24 @@ class MatrixMultiplication extends Thread {
         matrix2 = new int[n][n];
         result = new int[n][n];
 
-        System.out.println("Enter the First Matrix:");
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < n; j++) {
-                matrix1[i][j] = input.nextInt();
-            }
-        }
-        System.out.println("Enter the Second Matrix:");
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < n; j++) {
-                matrix2[i][j] = input.nextInt();
-            }
-        }
+        System.out.println("\n1.Generate Matrices Automatically\n2.Input Matrices Manually");
+        int sel = input.nextInt();
 
-        MatrixMultiplication mat[] = new MatrixMultiplication[n];
+        switch (sel) {
+            case 1:
+                generate();
+                break;
+            case 2:
+                inputManually();
+                break;
+            default:
+                System.out.println("Wrong Selection\n");
+        }
 
         long tim;
         tim = System.currentTimeMillis();
+
+        MatrixMultiplication mat[] = new MatrixMultiplication[n];
 
         try {
             for (i = 0; i < n; i++) {
@@ -66,7 +102,7 @@ class MatrixMultiplication extends Thread {
 
         String output;
 
-        System.out.println("Multiplication of Matrices (Threads):");
+        System.out.println("\nMultiplication of Matrices (Threads):");
         for (i = 0; i < n; i++) {
             output = "";
             for (j = 0; j < n; j++) {
@@ -74,7 +110,8 @@ class MatrixMultiplication extends Thread {
             }
             System.out.println(output);
         }
-        System.out.println("Time Required for Multiplication (Threads): " + (System.currentTimeMillis() - tim) + " miliseconds.\n");
+
+        long threadTime = System.currentTimeMillis() - tim;
 
         tim = System.currentTimeMillis();
 
@@ -87,7 +124,7 @@ class MatrixMultiplication extends Thread {
             }
         }
 
-        System.out.println("Multiplication of Matrices (Normal):");
+        System.out.println("\nMultiplication of Matrices (Normal):");
         for (i = 0; i < n; i++) {
             output = "";
             for (j = 0; j < n; j++) {
@@ -95,6 +132,10 @@ class MatrixMultiplication extends Thread {
             }
             System.out.println(output);
         }
-        System.out.println("Time Required for Multiplication (Normal): " + (System.currentTimeMillis() - tim) + " miliseconds.");
+        
+        long normalTime = System.currentTimeMillis() - tim;
+
+        System.out.println("\nTime Required for Multiplication (Thread): " + threadTime + " milliseconds.");
+        System.out.println("Time Required for Multiplication (Normal): " + normalTime + " milliseconds.");
     }
 }
