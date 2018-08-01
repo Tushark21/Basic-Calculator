@@ -1,6 +1,7 @@
 package resizer;
 
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +16,7 @@ class NewJFrame extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -27,6 +29,9 @@ class NewJFrame extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("false"), this, org.jdesktop.beansbinding.BeanProperty.create("resizable"));
+        bindingGroup.addBinding(binding);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel1.setText("Height:");
@@ -114,6 +119,8 @@ class NewJFrame extends javax.swing.JFrame {
                 .addContainerGap(18, Short.MAX_VALUE))
         );
 
+        bindingGroup.bind();
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -124,7 +131,7 @@ class NewJFrame extends javax.swing.JFrame {
     double factor[]=new double[6];
     int originalWidth=512,originalHeight=512;
     
-    String inputImagePath = "C:\\Users\\Tushar\\Desktop\\sample.png";
+    String inputImagePath = "C:\\Users\\Tushar\\Desktop\\";
     String outputImagePath = "C:\\Users\\Tushar\\Desktop\\";
     
     public void resize(String inputImagePath,String outputImagePath, int scaledWidth, int scaledHeight)throws IOException {
@@ -133,12 +140,21 @@ class NewJFrame extends javax.swing.JFrame {
         BufferedImage inputImage = ImageIO.read(inputFile);
 
         // creates output image
-        BufferedImage outputImage = new BufferedImage(scaledWidth,scaledHeight, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage outputImage = new BufferedImage(scaledWidth,scaledHeight, BufferedImage.TRANSLUCENT);
 
+        /*
+        scaledImage = new BufferedImage(dWidth, dHeight, imageType);
+Graphics2D graphics2D = scaledImage.createGraphics();
+graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+graphics2D.drawImage(imageToScale, 0, 0, dWidth, dHeight, null);
+graphics2D.dispose();*/
         // scales the input image to the output image
-        Graphics2D g2d = outputImage.createGraphics();
-        g2d.drawImage(inputImage, 0, 0, scaledWidth, scaledHeight, null);
-        g2d.dispose();
+        Graphics2D graphics2D = outputImage.createGraphics();
+        graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        graphics2D.drawImage(inputImage, 0, 0, scaledWidth, scaledHeight, null);
+        graphics2D.dispose();
+
 
         // extracts extension of output file
         String formatName = outputImagePath.substring(outputImagePath.lastIndexOf(".") + 1);
@@ -166,6 +182,7 @@ class NewJFrame extends javax.swing.JFrame {
         originalHeight=Integer.parseInt(t1.getText());
         originalWidth=Integer.parseInt(t2.getText());
         String name=t3.getText();
+        inputImagePath+=name+".png";
         
         try {
             for(int i=0;i<6;i++){
@@ -181,8 +198,7 @@ class NewJFrame extends javax.swing.JFrame {
             Resizer.resize(inputImagePath, outputImagePath2, percent);
             */
         } catch (IOException ex) {
-            l1.setText("Error");
-            //System.out.println("Error resizing the image.");
+            l1.setText("Error:"+ex.getMessage());
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -231,5 +247,6 @@ class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JTextField t1;
     private javax.swing.JTextField t2;
     private javax.swing.JTextField t3;
+    private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 }
