@@ -1,7 +1,7 @@
 package resizer;
 
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,6 @@ class NewJFrame extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -29,9 +28,6 @@ class NewJFrame extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("false"), this, org.jdesktop.beansbinding.BeanProperty.create("resizable"));
-        bindingGroup.addBinding(binding);
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel1.setText("Height:");
@@ -119,8 +115,6 @@ class NewJFrame extends javax.swing.JFrame {
                 .addContainerGap(18, Short.MAX_VALUE))
         );
 
-        bindingGroup.bind();
-
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -128,77 +122,71 @@ class NewJFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_t3ActionPerformed
 
-    double factor[]=new double[6];
-    int originalWidth=512,originalHeight=512;
-    
-    String inputImagePath = "C:\\Users\\Tushar\\Desktop\\";
-    String outputImagePath = "C:\\Users\\Tushar\\Desktop\\";
-    
-    public void resize(String inputImagePath,String outputImagePath, int scaledWidth, int scaledHeight)throws IOException {
+    double factor[] = new double[6];
+    String folders[] = new String[6];
+    int originalWidth = 512, originalHeight = 512;
+
+    public void resize(String inputImagePath, String outputImagePath, int scaledWidth, int scaledHeight) throws IOException {
         // reads input image
         File inputFile = new File(inputImagePath);
         BufferedImage inputImage = ImageIO.read(inputFile);
 
-        // creates output image
-        BufferedImage outputImage = new BufferedImage(scaledWidth,scaledHeight, BufferedImage.TRANSLUCENT);
+        BufferedImage outputImage = new BufferedImage(scaledWidth, scaledHeight, inputImage.getType());
 
-        /*
-        scaledImage = new BufferedImage(dWidth, dHeight, imageType);
-Graphics2D graphics2D = scaledImage.createGraphics();
-graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-graphics2D.drawImage(imageToScale, 0, 0, dWidth, dHeight, null);
-graphics2D.dispose();*/
-        // scales the input image to the output image
-        Graphics2D graphics2D = outputImage.createGraphics();
-        graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        Image outImage = inputImage.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_AREA_AVERAGING);
 
-        graphics2D.drawImage(inputImage, 0, 0, scaledWidth, scaledHeight, null);
-        graphics2D.dispose();
+        Graphics2D g = outputImage.createGraphics();
 
+        g.drawImage(outImage, 0, 0, scaledWidth, scaledHeight, this);
+
+        //g.drawImage(inputImage, 0, 0, scaledWidth, scaledHeight, null);
+        g.dispose();
 
         // extracts extension of output file
         String formatName = outputImagePath.substring(outputImagePath.lastIndexOf(".") + 1);
 
         // writes to output file
         ImageIO.write(outputImage, formatName, new File(outputImagePath));
-}
-
-    public void resize(String inputImagePath,String outputImagePath, double percent) throws IOException {
-        File inputFile = new File(inputImagePath);
-        BufferedImage inputImage = ImageIO.read(inputFile);
-        int scaledWidth = (int) (inputImage.getWidth() * percent);
-        int scaledHeight = (int) (inputImage.getHeight() * percent);
-        resize(inputImagePath, outputImagePath, scaledWidth, scaledHeight);
     }
-    
+
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        factor[0]=.75;
-        factor[1]=1;
-        factor[2]=1.5;
-        factor[3]=2;
-        factor[4]=3;
-        factor[5]=4;
-        
-        originalHeight=Integer.parseInt(t1.getText());
-        originalWidth=Integer.parseInt(t2.getText());
-        String name=t3.getText();
-        inputImagePath+=name+".png";
-        
+        factor[0] = .75;
+        factor[1] = 1;
+        factor[2] = 1.5;
+        factor[3] = 2;
+        factor[4] = 3;
+        factor[5] = 4;
+
+        folders[0] = "ldpi";
+        folders[1] = "mdpi";
+        folders[2] = "hdpi";
+        folders[3] = "xhdpi";
+        folders[4] = "xxhdpi";
+        folders[5] = "xxxhdpi";
+
+        String inputImagePath = "C:\\Users\\Tushar\\Desktop\\";
+        String outputImagePath = "C:\\Users\\Tushar\\Desktop\\";
+
+        originalHeight = Integer.parseInt(t1.getText());
+        originalWidth = Integer.parseInt(t2.getText());
+        String name = t3.getText();
+        inputImagePath += name + ".png";
+
         try {
-            for(int i=0;i<6;i++){
-                int scaledWidth = (int)(originalWidth*factor[i]);
-                int scaledHeight = (int)(originalHeight*factor[i]);
-                resize(inputImagePath, outputImagePath+name+scaledHeight+".png", scaledWidth, scaledHeight);
+            for (int i = 5; i >= 0; i--) {
+                int scaledWidth = (int) (originalWidth * factor[i]);
+                int scaledHeight = (int) (originalHeight * factor[i]);
+                resize(inputImagePath, outputImagePath + folders[i] + "\\" + name + ".png", scaledWidth, scaledHeight);
             }
-            l1.setText("Image Resize Successful");
-            
+            l1.setText(name+" Resized Successful");
+
             /*
             // resize smaller by 50%
             double percent = 0.5;
             Resizer.resize(inputImagePath, outputImagePath2, percent);
-            */
+             */
         } catch (IOException ex) {
-            l1.setText("Error:"+ex.getMessage());
+            l1.setText("Error:" + ex.getMessage());
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -247,6 +235,5 @@ graphics2D.dispose();*/
     private javax.swing.JTextField t1;
     private javax.swing.JTextField t2;
     private javax.swing.JTextField t3;
-    private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 }
