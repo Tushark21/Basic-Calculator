@@ -5,9 +5,12 @@
  */
 package SemanticParser;
 
+import java.awt.Toolkit;
+import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.util.Vector;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 /**
@@ -26,9 +29,6 @@ class LRItem {
 
 public class NewJFrame extends javax.swing.JFrame {
 
-    /**
-     * Creates new form NewJFrame
-     */
     //
     int nx;
     //parsing table
@@ -92,6 +92,51 @@ public class NewJFrame extends javax.swing.JFrame {
         }
     }
 
+    //function to retrive productions, terminals and non-terminals
+    void retriveFromDB() {
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/semanticParser", "root", "tushar@123");
+
+            Statement stmt = (Statement) con.createStatement();
+
+            //retrive productions
+            ResultSet rs = stmt.executeQuery("select * from productions");
+            //rs = stmt.executeQuery("alter user 'root'@'localhost' identified with mysql_native_password by 'tushar@123'");
+            //rs = stmt.executeQuery("select * from productions");
+            while (rs.next()) {
+                lhs.add(rs.getString(1));
+                rhs.add(rs.getString(2));
+                if (rs.getString(3) != null) {
+                    context.add(rs.getString(3));
+                } else {
+                    context.add("-");
+                }
+                //System.out.println(rs.getInt(1) + "  " + rs.getString(2) + "  " + rs.getString(3));
+            }
+
+            //retrive terminals
+            rs = stmt.executeQuery("select * from terminals");
+            while (rs.next()) {
+                terminals.add(rs.getString(1));
+                //System.out.println(rs.getInt(1) + "  " + rs.getString(2) + "  " + rs.getString(3));
+            }
+
+            //retrive non-terminals
+            rs = stmt.executeQuery("select * from nonTerminals");
+            while (rs.next()) {
+                nonTerminals.add(rs.getString(1));
+                //System.out.println(rs.getInt(1) + "  " + rs.getString(2) + "  " + rs.getString(3));
+            }
+
+            con.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
     //function to find index of terminals and non-terminals indicating columns in parse table
     int findIndex(String str) {
         for (int i = 0; i < index.size(); i++) {
@@ -111,7 +156,7 @@ public class NewJFrame extends javax.swing.JFrame {
     static int toInteger(String str) {
         int i = 0;
         //need to change
-        if (str.charAt(0) == 'r' || str.charAt(0) == 's') {
+        if (str.charAt(0) == 'R' || str.charAt(0) == 'S') {
             i = 1;
         }
 
@@ -130,7 +175,7 @@ public class NewJFrame extends javax.swing.JFrame {
     //function to find the production number
     int findProductionNumber(String l, String r) {
         for (int i = 0; i < lhs.size(); i++) {
-            if (l == lhs.get(i) && r == rhs.get(i)) {
+            if (l.equals(lhs.get(i)) && r.equals(rhs.get(i))) {
                 return i;
             }
         }
@@ -285,7 +330,7 @@ public class NewJFrame extends javax.swing.JFrame {
         for (int state = 1; state < LRI.size(); state++) {
             int row, col, prodNo;
             //System.out.println(getRHSVariable(String.valueOf(LRI.get(state).rightOfProd.get(0)), Integer.parseInt(String.valueOf(LRI.get(state).pointerPos.get(0)))));
-            //Entries corresponding to final items (reduce entries)
+            //Entries crossponding to final items (reduce entries)
             if (getRHSVariable(String.valueOf(LRI.get(state).rightOfProd.get(0)), Integer.parseInt(String.valueOf(LRI.get(state).pointerPos.get(0)))).equals("$") && state != 1) {
                 row = state;
                 col = findIndex("$");
@@ -294,11 +339,11 @@ public class NewJFrame extends javax.swing.JFrame {
                 prodNo = findProductionNumber(String.valueOf(LRI.get(state).leftOfProd.get(0)), String.valueOf(LRI.get(state).rightOfProd.get(0)));
                 String concat = toString(prodNo);
                 for (int i1 = 0; i1 <= col; i1++) {
-                    parseTable[row][i1] = "r" + concat;
+                    parseTable[row][i1] = "R" + concat;
                     //System.out.println(parseTable[row][i1]);
                 }
             }
-            //Entries corresponding to state numbers
+            //Entries crossponding to state numbers
             if (isNonTerminal(LRI.get(state).gotoSymbol)) {
                 row = LRI.get(state).prevState;
                 col = findIndex(LRI.get(state).gotoSymbol);
@@ -307,12 +352,12 @@ public class NewJFrame extends javax.swing.JFrame {
                 //System.out.println(row+","+col+LRI.get(state).gotoSymbol);
                 parseTable[row][col] = concat;
                 //System.out.println(parseTable[row][col]);
-            } //Entries corresponding to shift
+            } //Entries crossponding to shift
             else {
                 row = LRI.get(state).prevState;
                 col = findIndex(LRI.get(state).gotoSymbol);
                 String concat = toString(state);
-                parseTable[row][col] = "s" + concat;
+                parseTable[row][col] = "S" + concat;
 
                 //System.out.println(parseTable[row][col]);
             }
@@ -381,7 +426,7 @@ public class NewJFrame extends javax.swing.JFrame {
                 //System.out.println("ERROR");
                 break;
             }
-            if (parseTable[toInteger(parseStack[top])][col].charAt(0) == 's') {
+            if (parseTable[toInteger(parseStack[top])][col].charAt(0) == 'S') {
                 String pushSymbol = "";
                 pushSymbol += parseStr.get(i);
                 push(pushSymbol);
@@ -390,7 +435,7 @@ public class NewJFrame extends javax.swing.JFrame {
                 push(pushSymbol);
                 //cout<<toString(toInteger(parseTable[toInteger(parseStack[top])][col]))<<"\n";
                 i++;
-            } else if (parseTable[toInteger(parseStack[top])][col].charAt(0) == 'r') {
+            } else if (parseTable[toInteger(parseStack[top])][col].charAt(0) == 'R') {
                 int prodToReduce = toInteger(parseTable[toInteger(parseStack[top])][col]);
                 int len, l;
                 String pushSymbol = String.valueOf(lhs.get(prodToReduce));
@@ -418,16 +463,16 @@ public class NewJFrame extends javax.swing.JFrame {
                     //parseResult.setText(parseResult.getText() + parseStr.get(m) + " ");
                     //System.out.print(parseStr.get(m) + " ");
                 }
-                if(!(context.get(prodToReduce).equals("-"))){
+                if (!(context.get(prodToReduce).equals("-"))) {
                     //resContextField.append(context.get(prodToReduce)+" ");
-                    resultContextField.setText(resultContextField.getText()+" "+context.get(prodToReduce));
+                    resultContextField.setText(resultContextField.getText() + " " + context.get(prodToReduce));
                     //parseResult.setText(parseResult.getText() + "\nContext:" + context.get(prodToReduce) + "\n");
                 }
                 parseResult.append("\n");
                 //System.out.println(" Context:"+context.get(prodToReduce));
 
             } else if (parseTable[toInteger(parseStack[top])][col].equals("Accept")) {
-               parseResult.append("Accepted\n");
+                parseResult.append("Accepted\n");
                 //parseResult.setText(parseResult.getText() + "Accepted\n");
                 //System.out.println("Accepted");
                 break;
@@ -447,9 +492,10 @@ public class NewJFrame extends javax.swing.JFrame {
     }
 
     void addInitialProductions() {
-        
+
         //{ "S'","S","PN","FN","LN" };
         //{ "S,$","PN,$","FN,LN,$","tushar,$","gautam,$" };
+        /*
         if (nx == 0) {
             nx = 1;
             lhs.add("S'");
@@ -477,7 +523,8 @@ public class NewJFrame extends javax.swing.JFrame {
             lhs.add("DG");  //desigination
             lhs.add("C");   //connector
             lhs.add("A");   //authority
-             */
+         */
+ /*
             context.add("-");
             context.add("-");
             context.add("PERSON NAME");
@@ -540,11 +587,37 @@ public class NewJFrame extends javax.swing.JFrame {
             //nonTerminals.add("SN");
             //nonTerminals.add("MN");
             //nonTerminals.add("MN");
+            
         }
+         */
+        lhs = new Vector();
+        rhs = new Vector();
+        context = new Vector();
+
+        terminals = new Vector();
+        nonTerminals = new Vector();
+
+        retriveFromDB();
+
+        printProductions();
+        /*
+        for(int i=0;i<lhs.size();i++){
+            System.out.println(lhs.get(i)+"->"+rhs.get(i));
+        }*/
+
+        for (int i = 0; i < terminals.size(); i++) {
+            System.out.println(terminals.get(i));
+        }
+        System.out.println();
+        for (int i = 0; i < nonTerminals.size(); i++) {
+            System.out.println(nonTerminals.get(i));
+        }
+        nx = 1;
     }
     //////////
 
     public NewJFrame() {
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\Tushar\\Neatbeans Projects\\Semantic_Parser\\src\\SemanticParser\\logo.png"));
         initComponents();
     }
 
@@ -899,9 +972,10 @@ public class NewJFrame extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 538, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 538, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(errorField, javax.swing.GroupLayout.PREFERRED_SIZE, 505, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 0, Short.MAX_VALUE))
-            .addComponent(errorField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -918,59 +992,58 @@ public class NewJFrame extends javax.swing.JFrame {
     private void jTabbedPane1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTabbedPane1FocusGained
         errorField.setText("");
         generateParsingTable();
-        String column[]=new String[(index.size()+1)];
-        column[0]="States";
-        
-        for(int i=1;i<index.size()+1;i++){
-            column[i]=String.valueOf(index.get(i-1));
+        String column[] = new String[(index.size() + 1)];
+        column[0] = "States";
+
+        for (int i = 1; i < index.size() + 1; i++) {
+            column[i] = String.valueOf(index.get(i - 1));
         }
 
-        String[][] table=new String[LRI.size()][index.size()+1];
-        for(int i=0;i<LRI.size();i++){
-            for(int j=0;j<index.size()+1;j++){
-                if(j==0){
-                    table[i][j]=toString(i);
-                }
-                else{
-                    table[i][j]=parseTable[i][j-1];
+        String[][] table = new String[LRI.size()][index.size() + 1];
+        for (int i = 0; i < LRI.size(); i++) {
+            for (int j = 0; j < index.size() + 1; j++) {
+                if (j == 0) {
+                    table[i][j] = toString(i);
+                } else {
+                    table[i][j] = parseTable[i][j - 1];
                 }
             }
         }
 
-        JTable pTable=new JTable(table,column);
-        
+        JTable pTable = new JTable(table, column);
+
         pTable.setEnabled(false);
         //pTable.setBounds(5,5,500,500);
-        
+
         parseTableField.setModel(pTable.getModel());
-        
-        //Show Productions
-        String []productionColumn={"Productions","Context"};
-        String [][]prodContextTable=new String[lhs.size()-1][2];
-        String prod=" ",temp,rhsProd;
 
-        for(int i=1;i<lhs.size();i++){
-            prod=lhs.get(i)+" -> ";
-            temp="";
-            rhsProd=String.valueOf(rhs.get(i));
-            for(int j=0;j<rhsProd.length()-1;j++){
-                if(rhsProd.charAt(j)!=','){
-                    temp+=rhsProd.charAt(j);
-                }
-                else{
-                    prod+=temp+" ";
-                    temp="";
+        //Show Productions
+        String[] productionColumn = {"Productions", "Context"};
+        String[][] prodContextTable = new String[lhs.size() - 1][2];
+        String prod = " ", temp, rhsProd;
+
+        for (int i = 1; i < lhs.size(); i++) {
+            prod = lhs.get(i) + " -> ";
+            temp = "";
+            rhsProd = String.valueOf(rhs.get(i));
+            for (int j = 0; j < rhsProd.length() - 1; j++) {
+                if (rhsProd.charAt(j) != ',') {
+                    temp += rhsProd.charAt(j);
+                } else {
+                    prod += temp + " ";
+                    temp = "";
                 }
             }
-            prod+=temp;
-            prodContextTable[i-1][0]=prod;
-            prodContextTable[i-1][1]=String.valueOf(context.get(i));
+            prod += temp;
+            prodContextTable[i - 1][0] = prod;
+            prodContextTable[i - 1][1] = String.valueOf(context.get(i));
         }
-        JTable pCTable=new JTable(prodContextTable,productionColumn);
-        
+        //JButton buttons[]=new JButton[10];
+        JTable pCTable = new JTable(prodContextTable, productionColumn);
+        //pCTable.getColumn(2);
         pTable.setEnabled(false);
         //pTable.setBounds(5,5,500,500);
-        
+
         productionTable.setModel(pCTable.getModel());
         //System.out.println(prod+"hello");
     }//GEN-LAST:event_jTabbedPane1FocusGained
@@ -987,6 +1060,20 @@ public class NewJFrame extends javax.swing.JFrame {
             for (int i = 0; i < terminalText.length(); i++) {
                 if (terminalText.charAt(i) == ',') {
                     terminals.add(temp);
+                    try {
+                        Class.forName("com.mysql.cj.jdbc.Driver");
+                        Connection con = DriverManager.getConnection(
+                                "jdbc:mysql://localhost:3306/semanticParser", "root", "tushar@123");
+
+                        Statement stmt = (Statement) con.createStatement();
+                        String sql = "INSERT INTO terminals " + "VALUES ('" + temp + "')";
+                        stmt.executeUpdate(sql);
+                        //ResultSet rs = stmt.executeQuery("select * from productions");
+
+                        con.close();
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
                     temp = "";
                 } else {
                     temp += terminalText.charAt(i);
@@ -1001,6 +1088,20 @@ public class NewJFrame extends javax.swing.JFrame {
             for (int i = 0; i < nonTerminalText.length(); i++) {
                 if (nonTerminalText.charAt(i) == ',') {
                     nonTerminals.add(temp);
+                    try {
+                        Class.forName("com.mysql.cj.jdbc.Driver");
+                        Connection con = DriverManager.getConnection(
+                                "jdbc:mysql://localhost:3306/semanticParser", "root", "tushar@123");
+
+                        Statement stmt = (Statement) con.createStatement();
+                        String sql = "INSERT INTO nonterminals " + "VALUES ('" + temp + "')";
+                        stmt.executeUpdate(sql);
+                        //ResultSet rs = stmt.executeQuery("select * from productions");
+
+                        con.close();
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
                     temp = "";
                 } else {
                     temp += nonTerminalText.charAt(i);
@@ -1022,35 +1123,54 @@ public class NewJFrame extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         String prodText = prodField.getText();
         String contextText = contextField.getText();
+        String lhsText, rhsText, sql;
 
-        if (prodText.length()!= 0) {
+        if (prodText.length() != 0) {
             //Lhs of Production
-            String lhsText=prodText.substring(0, prodText.indexOf('-'));
+            lhsText = prodText.substring(0, prodText.indexOf('-'));
             lhs.add(lhsText);
             //System.out.println(lhsText);
-            
+
             //Rhs of Production
-            String rhsText=prodText.substring(prodText.indexOf('>')+1, prodText.length());
-            rhsText=rhsText.replace(' ', ',');
-            rhsText+=",$";
+            rhsText = prodText.substring(prodText.indexOf('>') + 1, prodText.length());
+            rhsText = rhsText.replace(' ', ',');
+            rhsText += ",$";
             rhs.add(rhsText);
             //System.out.println(rhsText);
-            
+
             //Add Context
             if (contextText.length() == 0) {
                 context.add("-");
+                sql = "INSERT INTO productions " + "VALUES ('" + lhsText + "','" + rhsText + "',"+null+")";
             } else {
                 context.add(contextText);
+                sql = "INSERT INTO productions " + "VALUES ('" + lhsText + "','" + rhsText + "','" + contextText + "')";
             }
             prodField.setText("");
             contextField.setText("");
-            
+
+            try {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                Connection con = DriverManager.getConnection(
+                        "jdbc:mysql://localhost:3306/semanticParser", "root", "tushar@123");
+
+                Statement stmt = (Statement) con.createStatement();
+
+                stmt.executeUpdate(sql);
+                //ResultSet rs = stmt.executeQuery("select * from productions");
+
+                con.close();
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+
             errorField.setForeground(java.awt.Color.GREEN);
             errorField.setText("Production Added");
         } else {
             errorField.setForeground(java.awt.Color.red);
             errorField.setText("ERROR: Field is Empty");
         }
+
     }//GEN-LAST:event_jButton1ActionPerformed
 
     //Parse String
