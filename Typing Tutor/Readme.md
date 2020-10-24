@@ -7,7 +7,7 @@ Typing Software build on java, uses key events and java swing. Typical typing ap
 - JDK to run Compiled jar file.
 - Java IDE (Neatbeans,etc for compiling source code)
 
-you can download executable jar file from here ![Typing Software](src/jar/Typing Guru.jar)
+you can download executable jar file from here [Typing Software](https://github.com/Tushark21/Java-Projects/tree/master/Typing%20Tutor/src/jar)
 ### UI:
 ![UI of Typing Software](src/screanshots/ss1.png)![UI of Typing Software](src/screanshots/ss2.png)
 ![UI of Typing Software](src/screanshots/ss3.png)
