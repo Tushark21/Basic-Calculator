@@ -1,2 +1,3 @@
-# Basic-Calculator
-recommit
+# Java Projects
+
+This repo contains various java projects.
